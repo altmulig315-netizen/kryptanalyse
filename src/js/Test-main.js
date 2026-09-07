@@ -7,9 +7,9 @@ import { initModal } from './modules/modal.js'
 import { PasswordChecker } from './features/password-checker/validator.js'
 import { FrequencyAnalyzer } from './features/caesar-cipher/analyzer.js'
 import { AutoSolver } from './features/caesar-cipher/solver.js'
-import { 
-  debounce, 
-  caesarShift, 
+import {
+  debounce,
+  caesarShift,
   updateLegacyResult,
   validateFile,
   sanitizeText,
@@ -76,114 +76,114 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       dropZone.classList.remove('dragover')
       const file = e.dataTransfer.files[0]
-      
-        // Validate file
-        const validation = validateFile(file, {
-          allowedExtensions: ['.txt'],
-          maxSize: 5 * 1024 * 1024, // 5MB
-          allowedMimeTypes: ['text/plain', '']
-        })
-      
-        if (!validation.valid) {
-          alert(`❌ Filopplasting feilet: ${validation.error}`)
-          return
-        }
-      
-        if (file) {
-        const reader = new FileReader()
-        
-          reader.onerror = () => {
-            alert('❌ Feil ved lesing av fil')
-          }
-        
-        reader.onload = (event) => {
-          if (inputTextEl) {
-              try {
-                // Sanitize file content
-                const content = sanitizeText(event.target.result, {
-                  maxLength: 50000,
-                  allowNewlines: true
-                })
-              
-                if (content.length === 0) {
-                  alert('⚠️ Filen er tom eller inneholder ugyldig innhold')
-                  return
-                }
-              
-                inputTextEl.value = content
-                analyzer.updateFrequencyAnalysis(content)
-              } catch (error) {
-                console.error('Error processing file:', error)
-                alert('❌ Feil ved prosessering av fil')
-              }
-          }
-        }
-        
-          // Read as text with error handling
-          try {
-            reader.readAsText(file, 'UTF-8')
-          } catch (error) {
-            console.error('Error reading file:', error)
-            alert('❌ Kunne ikke lese filen')
-          }
+
+      // Validate file
+      const validation = validateFile(file, {
+        allowedExtensions: ['.txt'],
+        maxSize: 5 * 1024 * 1024, // 5MB
+        allowedMimeTypes: ['text/plain', '']
+      })
+
+      if (!validation.valid) {
+        alert(`❌ Filopplasting feilet: ${validation.error}`)
+        return
       }
-    })
-    
-    fileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0]
-      if (!file) return
-      
-        // Validate file
-        const validation = validateFile(file, {
-          allowedExtensions: ['.txt'],
-          maxSize: 5 * 1024 * 1024,
-          allowedMimeTypes: ['text/plain', '']
-        })
-      
-        if (!validation.valid) {
-          alert(`❌ Filopplasting feilet: ${validation.error}`)
-          fileInput.value = '' // Reset input
-          return
-        }
-      
-      const reader = new FileReader()
-      
+
+      if (file) {
+        const reader = new FileReader()
+
         reader.onerror = () => {
           alert('❌ Feil ved lesing av fil')
-          fileInput.value = ''
         }
-      
-      reader.onload = (event) => {
-        if (inputTextEl) {
+
+        reader.onload = (event) => {
+          if (inputTextEl) {
             try {
+              // Sanitize file content
               const content = sanitizeText(event.target.result, {
                 maxLength: 50000,
                 allowNewlines: true
               })
-            
+
               if (content.length === 0) {
                 alert('⚠️ Filen er tom eller inneholder ugyldig innhold')
-                fileInput.value = ''
                 return
               }
-            
+
               inputTextEl.value = content
               analyzer.updateFrequencyAnalysis(content)
             } catch (error) {
               console.error('Error processing file:', error)
               alert('❌ Feil ved prosessering av fil')
-              fileInput.value = ''
             }
+          }
         }
-      }
-      
+
+        // Read as text with error handling
         try {
           reader.readAsText(file, 'UTF-8')
         } catch (error) {
           console.error('Error reading file:', error)
           alert('❌ Kunne ikke lese filen')
-          fileInput.value = ''
         }
+      }
+    })
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+
+      // Validate file
+      const validation = validateFile(file, {
+        allowedExtensions: ['.txt'],
+        maxSize: 5 * 1024 * 1024,
+        allowedMimeTypes: ['text/plain', '']
+      })
+
+      if (!validation.valid) {
+        alert(`❌ Filopplasting feilet: ${validation.error}`)
+        fileInput.value = '' // Reset input
+        return
+      }
+
+      const reader = new FileReader()
+
+      reader.onerror = () => {
+        alert('❌ Feil ved lesing av fil')
+        fileInput.value = ''
+      }
+
+      reader.onload = (event) => {
+        if (inputTextEl) {
+          try {
+            const content = sanitizeText(event.target.result, {
+              maxLength: 50000,
+              allowNewlines: true
+            })
+
+            if (content.length === 0) {
+              alert('⚠️ Filen er tom eller inneholder ugyldig innhold')
+              fileInput.value = ''
+              return
+            }
+
+            inputTextEl.value = content
+            analyzer.updateFrequencyAnalysis(content)
+          } catch (error) {
+            console.error('Error processing file:', error)
+            alert('❌ Feil ved prosessering av fil')
+            fileInput.value = ''
+          }
+        }
+      }
+
+      try {
+        reader.readAsText(file, 'UTF-8')
+      } catch (error) {
+        console.error('Error reading file:', error)
+        alert('❌ Kunne ikke lese filen')
+        fileInput.value = ''
+      }
     })
   }
 
@@ -241,48 +241,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
   encryptBtn?.addEventListener('click', () => {
     if (!inputTextEl || !shiftEl || !outputEl) return
-      const shiftValidation = validateNumber(shiftEl.value, {
-        integer: true,
-        min: -100,
-        max: 100
-      })
-    
-      if (!shiftValidation.valid) {
-        alert(`❌ Ugyldig shift-verdi: ${shiftValidation.error}`)
-        return
-      }
-    
-      const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
-      outputEl.value = caesarShift(sanitized, shiftValidation.value || 0)
+    const shiftValidation = validateNumber(shiftEl.value, {
+      integer: true,
+      min: -100,
+      max: 100
+    })
+
+    if (!shiftValidation.valid) {
+      alert(`❌ Ugyldig shift-verdi: ${shiftValidation.error}`)
+      return
+    }
+
+    const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
+    outputEl.value = caesarShift(sanitized, shiftValidation.value || 0)
   })
 
   decryptBtn?.addEventListener('click', () => {
     if (!inputTextEl || !shiftEl || !outputEl) return
-      const shiftValidation = validateNumber(shiftEl.value, {
-        integer: true,
-        min: -100,
-        max: 100
-      })
-    
-      if (!shiftValidation.valid) {
-        alert(`❌ Ugyldig shift-verdi: ${shiftValidation.error}`)
-        return
-      }
-    
-      const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
-      outputEl.value = caesarShift(sanitized, -(shiftValidation.value || 0))
+    const shiftValidation = validateNumber(shiftEl.value, {
+      integer: true,
+      min: -100,
+      max: 100
+    })
+
+    if (!shiftValidation.valid) {
+      alert(`❌ Ugyldig shift-verdi: ${shiftValidation.error}`)
+      return
+    }
+
+    const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
+    outputEl.value = caesarShift(sanitized, -(shiftValidation.value || 0))
   })
 
   rot13Btn?.addEventListener('click', () => {
     if (!inputTextEl || !outputEl) return
-      const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
-      outputEl.value = caesarShift(sanitized, 13)
+    const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
+    outputEl.value = caesarShift(sanitized, 13)
   })
 
   rot5Btn?.addEventListener('click', () => {
     if (!inputTextEl || !outputEl) return
-      const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
-      outputEl.value = sanitized
+    const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
+    outputEl.value = sanitized
       .split('')
       .map((c) => (c.match(/[0-9]/) ? String.fromCharCode(((c.charCodeAt(0) - 48 + 5) % 10) + 48) : c))
       .join('')
@@ -290,8 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   rot47Btn?.addEventListener('click', () => {
     if (!inputTextEl || !outputEl) return
-      const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
-      outputEl.value = sanitized
+    const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
+    outputEl.value = sanitized
       .split('')
       .map((c) => {
         const code = c.charCodeAt(0)
@@ -302,14 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   autoSolveBtn?.addEventListener('click', () => {
     if (!inputTextEl) return
-     const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
-     solver.autoSolve(sanitized)
+    const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
+    solver.autoSolve(sanitized)
   })
 
   bruteForceBtn?.addEventListener('click', () => {
     if (!inputTextEl) return
-     const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
-     solver.bruteForce(sanitized)
+    const sanitized = sanitizeText(inputTextEl.value, { maxLength: 50000 })
+    solver.bruteForce(sanitized)
   })
 
   copyBtn?.addEventListener('click', (event) => {

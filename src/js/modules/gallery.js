@@ -1,5 +1,5 @@
 // Inline gallery rendering + toggle helpers for the card collection.
-import { escapeHtml, setSafeText, sanitizeText } from '../core/utils.js'
+import { setSafeText, sanitizeText } from '../core/utils.js'
 
 function collapseGallery (btn, inline, container, seeAllContainer) {
   if (container) container.style.display = ''
@@ -40,13 +40,13 @@ export function initGallery () {
       if (link.getAttribute('aria-hidden') === 'true') return
       const href = link.href
       const card = link.querySelector('.card')
-      
-        // Sanitize extracted text
-        const rawTitle = card?.querySelector('h3')?.textContent?.trim() || ''
-        const rawSubtitle = card?.querySelector('p')?.textContent?.trim() || ''
-        const title = sanitizeText(rawTitle, { maxLength: 200 })
-        const subtitle = sanitizeText(rawSubtitle, { maxLength: 500 })
-      
+
+      // Sanitize extracted text
+      const rawTitle = card?.querySelector('h3')?.textContent?.trim() || ''
+      const rawSubtitle = card?.querySelector('p')?.textContent?.trim() || ''
+      const title = sanitizeText(rawTitle, { maxLength: 200 })
+      const subtitle = sanitizeText(rawSubtitle, { maxLength: 500 })
+
       const style = card?.getAttribute('style') || ''
 
       const item = document.createElement('div')
@@ -56,45 +56,45 @@ export function initGallery () {
 
       const a = document.createElement('a')
       a.className = 'gallery-link'
-      
-        // Validate and sanitize URL
-        try {
-          const url = new URL(href)
-          // Only allow http/https protocols
-          if (url.protocol === 'http:' || url.protocol === 'https:') {
-            a.href = href
-          } else {
-            console.warn('Invalid URL protocol:', url.protocol)
-            return
-          }
-        } catch (error) {
-          console.warn('Invalid URL:', href)
+
+      // Validate and sanitize URL
+      try {
+        const url = new URL(href)
+        // Only allow http/https protocols
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+          a.href = href
+        } else {
+          console.warn('Invalid URL protocol:', url.protocol)
           return
         }
-      
+      } catch (error) {
+        console.warn('Invalid URL:', href)
+        return
+      }
+
       a.target = '_blank'
       a.rel = 'noopener noreferrer'
 
       const inner = document.createElement('div')
       inner.className = 'featured-project-card gallery-card'
-      
-        // Sanitize inline styles (only allow safe properties)
-        if (style) {
-          const safeStyle = style.replace(/[<>'"]/g, '')
-          inner.setAttribute('style', safeStyle)
-        }
-      
-        if (title) {
-          // Use textContent for aria-label (already safe)
-          inner.setAttribute('aria-label', title)
-        }
+
+      // Sanitize inline styles (only allow safe properties)
+      if (style) {
+        const safeStyle = style.replace(/[<>'"]/g, '')
+        inner.setAttribute('style', safeStyle)
+      }
+
+      if (title) {
+        // Use textContent for aria-label (already safe)
+        inner.setAttribute('aria-label', title)
+      }
 
       const overlay = document.createElement('div')
       overlay.className = 'gallery-overlay'
       const h = document.createElement('h3')
-        setSafeText(h, title)
+      setSafeText(h, title)
       const p = document.createElement('p')
-        setSafeText(p, subtitle)
+      setSafeText(p, subtitle)
       overlay.appendChild(h)
       overlay.appendChild(p)
 

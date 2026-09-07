@@ -115,12 +115,7 @@ export class PasswordChecker {
     const attemptsPerSecond = 1e10
     const secondsToCrack = combinations / attemptsPerSecond
     let category, categoryText
-    if (bits < 28) { category = 'very-weak'; categoryText = '❌ Ekstremt svakt' }
-    else if (bits < 36) { category = 'weak'; categoryText = '⚠️ Veldig svakt' }
-    else if (bits < 60) { category = 'weak'; categoryText = '⚠️ Svakt' }
-    else if (bits < 80) { category = 'moderate'; categoryText = '⚡ Moderat' }
-    else if (bits < 128) { category = 'strong'; categoryText = '✅ Sterkt' }
-    else { category = 'very-strong'; categoryText = '🔐 Veldig sterkt' }
+    if (bits < 28) { category = 'very-weak'; categoryText = '❌ Ekstremt svakt' } else if (bits < 36) { category = 'weak'; categoryText = '⚠️ Veldig svakt' } else if (bits < 60) { category = 'weak'; categoryText = '⚠️ Svakt' } else if (bits < 80) { category = 'moderate'; categoryText = '⚡ Moderat' } else if (bits < 128) { category = 'strong'; categoryText = '✅ Sterkt' } else { category = 'very-strong'; categoryText = '🔐 Veldig sterkt' }
     return {
       length,
       charsetSize,

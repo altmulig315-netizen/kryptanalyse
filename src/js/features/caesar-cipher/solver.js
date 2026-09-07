@@ -16,9 +16,9 @@ import {
   detectLanguageVariant,
   detectPatterns,
   detectPolyalphabetic,
-    interpretICConfidence,
-    sanitizeText,
-    escapeHtml
+  interpretICConfidence,
+  sanitizeText,
+  escapeHtml
 } from '../../core/utils.js'
 import { FrequencyAnalyzer } from './analyzer.js'
 
@@ -60,15 +60,15 @@ export class AutoSolver {
 
   autoSolve (text) {
     if (!text) return
-    
+
     // Sanitize input text
     const sanitizedText = sanitizeText(text, {
       maxLength: 50000,
       allowNewlines: true
     })
-    
+
     if (!sanitizedText) return
-    
+
     const mode = document.getElementById('analysisMode')?.value || 'educational'
     const panel = document.getElementById('autoSolvePanel')
     const results = document.getElementById('autoSolveResults')
@@ -121,7 +121,7 @@ export class AutoSolver {
       let html = '<div class="analysis-report-box">'
       html += '<h3 class="analysis-report-title">🔬 Analyserapport</h3>'
       html += '<div class="analysis-report-content">'
-        html += `<strong>📏 Tekstlengde:</strong> ${escapeHtml(sanitizedText.replace(/[^A-ZÆØÅ]/gi, '')).length} tegn<br>`
+      html += `<strong>📏 Tekstlengde:</strong> ${escapeHtml(sanitizedText.replace(/[^A-ZÆØÅ]/gi, '')).length} tegn<br>`
       html += `<strong>🎲 Entropy:</strong> ${entropy.toFixed(3)} bits (${entropy < 4.0 ? 'strukturert' : 'tilfeldig'})<br>`
       html += `<strong>🔍 IC:</strong> ${icData.mean.toFixed(4)} ± ${icData.stdDev.toFixed(4)}<br>`
       html += `<strong>🎯 IC-konfidans:</strong> ${icConfidence}<br>`
@@ -184,15 +184,15 @@ export class AutoSolver {
 
   bruteForce (text) {
     if (!text) return
-    
+
     // Sanitize input text
     const sanitizedText = sanitizeText(text, {
       maxLength: 50000,
       allowNewlines: true
     })
-    
+
     if (!sanitizedText) return
-    
+
     const panel = document.getElementById('bruteForcePanel')
     const results = document.getElementById('bruteForceResults')
     if (!panel || !results) return
@@ -210,7 +210,7 @@ export class AutoSolver {
     results.querySelectorAll('.brute-result-card').forEach((card) => {
       card.addEventListener('click', () => {
         const shift = Number(card.dataset.shift || 0)
-          const decoded = caesarTransform(sanitizedText, shift, this.alphabetKey, false)
+        const decoded = caesarTransform(sanitizedText, shift, this.alphabetKey, false)
         const output = document.getElementById('outputText')
         const shiftValue = document.getElementById('shiftValue')
         if (output) output.value = decoded

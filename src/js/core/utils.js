@@ -11,267 +11,269 @@ import {
   NORWEGIAN_WORDS
 } from './constants.js'
 
-  // ═══════════════════════════════════════════════════════════
-  // SECURITY UTILITIES: Sanitization & Validation
-  // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// SECURITY UTILITIES: Sanitization & Validation
+// ═══════════════════════════════════════════════════════════
 
-  /**
+/**
    * Escapes HTML special characters to prevent XSS attacks
    * @param {string} unsafe - Unsafe string that may contain HTML
    * @returns {string} HTML-safe string
    */
-  export function escapeHtml (unsafe) {
-    if (typeof unsafe !== 'string') return ''
-    return unsafe
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')
-  }
+export function escapeHtml (unsafe) {
+  if (typeof unsafe !== 'string') return ''
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 
-  /**
+/**
    * Sanitizes text input by removing potentially dangerous content
    * @param {string} text - Input text to sanitize
    * @param {Object} options - Sanitization options
    * @returns {string} Sanitized text
    */
-  export function sanitizeText (text, options = {}) {
-    if (typeof text !== 'string') return ''
-  
-    const {
-      maxLength = 10000,
-      allowNewlines = true,
-      allowSpecialChars = true,
-      trim = true
-    } = options
+export function sanitizeText (text, options = {}) {
+  if (typeof text !== 'string') return ''
 
-    let sanitized = text
+  const {
+    maxLength = 10000,
+    allowNewlines = true,
+    trim = true
+  } = options
 
-    // Remove null bytes
-    sanitized = sanitized.replace(/\0/g, '')
-  
-    // Remove control characters except newlines/tabs if allowed
-    if (!allowNewlines) {
-      sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '')
-    } else {
-      sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-    }
+  let sanitized = text
 
-    // Remove script tags and event handlers
-    sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-    sanitized = sanitized.replace(/javascript:/gi, '')
-  
-    if (trim) {
-      sanitized = sanitized.trim()
-    }
+  // Remove null bytes
+  sanitized = sanitized.replace(/\0/g, '')
 
-    // Enforce maximum length
-    if (sanitized.length > maxLength) {
-      sanitized = sanitized.substring(0, maxLength)
-    }
-
-    return sanitized
+  // Remove control characters except newlines/tabs if allowed.
+  // no-control-regex er slaatt av med vilje: kontrolltegnene er selve maalet her.
+  if (!allowNewlines) {
+    // eslint-disable-next-line no-control-regex
+    sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '')
+  } else {
+    // eslint-disable-next-line no-control-regex
+    sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
   }
 
-  /**
+  // Remove script tags and event handlers
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+  sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+  sanitized = sanitized.replace(/javascript:/gi, '')
+
+  if (trim) {
+    sanitized = sanitized.trim()
+  }
+
+  // Enforce maximum length
+  if (sanitized.length > maxLength) {
+    sanitized = sanitized.substring(0, maxLength)
+  }
+
+  return sanitized
+}
+
+/**
    * Validates text input against rules
    * @param {string} text - Text to validate
    * @param {Object} rules - Validation rules
    * @returns {Object} Validation result {valid: boolean, errors: string[]}
    */
-  export function validateText (text, rules = {}) {
-    const errors = []
-  
-    const {
-      minLength = 0,
-      maxLength = 10000,
-      required = false,
-      allowEmpty = true,
-      pattern = null,
-      customValidator = null
-    } = rules
+export function validateText (text, rules = {}) {
+  const errors = []
 
-    if (typeof text !== 'string') {
-      errors.push('Input må være tekst')
-      return { valid: false, errors }
-    }
+  const {
+    minLength = 0,
+    maxLength = 10000,
+    required = false,
+    allowEmpty = true,
+    pattern = null,
+    customValidator = null
+  } = rules
 
-    if (required && text.trim().length === 0) {
-      errors.push('Dette feltet er påkrevd')
-      return { valid: false, errors }
-    }
+  if (typeof text !== 'string') {
+    errors.push('Input må være tekst')
+    return { valid: false, errors }
+  }
 
-    if (!allowEmpty && text.length === 0) {
-      errors.push('Feltet kan ikke være tomt')
-    }
+  if (required && text.trim().length === 0) {
+    errors.push('Dette feltet er påkrevd')
+    return { valid: false, errors }
+  }
 
-    if (text.length < minLength) {
-      errors.push(`Minimum lengde er ${minLength} tegn`)
-    }
+  if (!allowEmpty && text.length === 0) {
+    errors.push('Feltet kan ikke være tomt')
+  }
 
-    if (text.length > maxLength) {
-      errors.push(`Maksimum lengde er ${maxLength} tegn`)
-    }
+  if (text.length < minLength) {
+    errors.push(`Minimum lengde er ${minLength} tegn`)
+  }
 
-    if (pattern && !pattern.test(text)) {
-      errors.push('Ugyldig format')
-    }
+  if (text.length > maxLength) {
+    errors.push(`Maksimum lengde er ${maxLength} tegn`)
+  }
 
-    if (customValidator && typeof customValidator === 'function') {
-      const customResult = customValidator(text)
-      if (customResult !== true) {
-        errors.push(customResult || 'Validering feilet')
-      }
-    }
+  if (pattern && !pattern.test(text)) {
+    errors.push('Ugyldig format')
+  }
 
-    return {
-      valid: errors.length === 0,
-      errors
+  if (customValidator && typeof customValidator === 'function') {
+    const customResult = customValidator(text)
+    if (customResult !== true) {
+      errors.push(customResult || 'Validering feilet')
     }
   }
 
-  /**
+  return {
+    valid: errors.length === 0,
+    errors
+  }
+}
+
+/**
    * Validates and sanitizes file input
    * @param {File} file - File object to validate
    * @param {Object} options - Validation options
    * @returns {Object} {valid: boolean, error: string|null, sanitized: File|null}
    */
-  export function validateFile (file, options = {}) {
-    const {
-      allowedExtensions = ['.txt'],
-      maxSize = 5 * 1024 * 1024, // 5MB default
-      allowedMimeTypes = ['text/plain']
-    } = options
+export function validateFile (file, options = {}) {
+  const {
+    allowedExtensions = ['.txt'],
+    maxSize = 5 * 1024 * 1024, // 5MB default
+    allowedMimeTypes = ['text/plain']
+  } = options
 
-    if (!file) {
-      return { valid: false, error: 'Ingen fil valgt', sanitized: null }
-    }
-
-    // Check file size
-    if (file.size > maxSize) {
-      return {
-        valid: false,
-        error: `Filen er for stor. Maksimum størrelse: ${Math.round(maxSize / 1024 / 1024)}MB`,
-        sanitized: null
-      }
-    }
-
-    // Check file extension
-    const fileName = file.name.toLowerCase()
-    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext.toLowerCase()))
-  
-    if (!hasValidExtension) {
-      return {
-        valid: false,
-        error: `Ugyldig filtype. Tillatte typer: ${allowedExtensions.join(', ')}`,
-        sanitized: null
-      }
-    }
-
-    // Check MIME type if browser supports it
-    if (file.type && allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(file.type)) {
-      return {
-        valid: false,
-        error: 'Ugyldig filtype detektert',
-        sanitized: null
-      }
-    }
-
-    return { valid: true, error: null, sanitized: file }
+  if (!file) {
+    return { valid: false, error: 'Ingen fil valgt', sanitized: null }
   }
 
-  /**
+  // Check file size
+  if (file.size > maxSize) {
+    return {
+      valid: false,
+      error: `Filen er for stor. Maksimum størrelse: ${Math.round(maxSize / 1024 / 1024)}MB`,
+      sanitized: null
+    }
+  }
+
+  // Check file extension
+  const fileName = file.name.toLowerCase()
+  const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext.toLowerCase()))
+
+  if (!hasValidExtension) {
+    return {
+      valid: false,
+      error: `Ugyldig filtype. Tillatte typer: ${allowedExtensions.join(', ')}`,
+      sanitized: null
+    }
+  }
+
+  // Check MIME type if browser supports it
+  if (file.type && allowedMimeTypes.length > 0 && !allowedMimeTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: 'Ugyldig filtype detektert',
+      sanitized: null
+    }
+  }
+
+  return { valid: true, error: null, sanitized: file }
+}
+
+/**
    * Validates numeric input
    * @param {any} value - Value to validate
    * @param {Object} rules - Validation rules
    * @returns {Object} {valid: boolean, error: string|null, value: number|null}
    */
-  export function validateNumber (value, rules = {}) {
-    const {
-      min = -Infinity,
-      max = Infinity,
-      integer = false,
-      required = false
-    } = rules
+export function validateNumber (value, rules = {}) {
+  const {
+    min = -Infinity,
+    max = Infinity,
+    integer = false,
+    required = false
+  } = rules
 
-    if (value === null || value === undefined || value === '') {
-      if (required) {
-        return { valid: false, error: 'Verdi er påkrevd', value: null }
-      }
-      return { valid: true, error: null, value: null }
+  if (value === null || value === undefined || value === '') {
+    if (required) {
+      return { valid: false, error: 'Verdi er påkrevd', value: null }
     }
-
-    const num = Number(value)
-
-    if (isNaN(num)) {
-      return { valid: false, error: 'Ugyldig tall', value: null }
-    }
-
-    if (!isFinite(num)) {
-      return { valid: false, error: 'Tallet må være endelig', value: null }
-    }
-
-    if (integer && !Number.isInteger(num)) {
-      return { valid: false, error: 'Må være et heltall', value: null }
-    }
-
-    if (num < min) {
-      return { valid: false, error: `Minimum verdi er ${min}`, value: null }
-    }
-
-    if (num > max) {
-      return { valid: false, error: `Maksimum verdi er ${max}`, value: null }
-    }
-
-    return { valid: true, error: null, value: num }
+    return { valid: true, error: null, value: null }
   }
 
-  /**
+  const num = Number(value)
+
+  if (isNaN(num)) {
+    return { valid: false, error: 'Ugyldig tall', value: null }
+  }
+
+  if (!isFinite(num)) {
+    return { valid: false, error: 'Tallet må være endelig', value: null }
+  }
+
+  if (integer && !Number.isInteger(num)) {
+    return { valid: false, error: 'Må være et heltall', value: null }
+  }
+
+  if (num < min) {
+    return { valid: false, error: `Minimum verdi er ${min}`, value: null }
+  }
+
+  if (num > max) {
+    return { valid: false, error: `Maksimum verdi er ${max}`, value: null }
+  }
+
+  return { valid: true, error: null, value: num }
+}
+
+/**
    * Creates a safe text node to prevent XSS
    * @param {string} text - Text to convert to text node
    * @returns {Text} Text node
    */
-  export function createSafeTextNode (text) {
-    return document.createTextNode(String(text || ''))
-  }
+export function createSafeTextNode (text) {
+  return document.createTextNode(String(text || ''))
+}
 
-  /**
+/**
    * Safely sets text content on an element
    * @param {HTMLElement} element - Element to set text on
    * @param {string} text - Text content
    */
-  export function setSafeText (element, text) {
-    if (!element) return
-    element.textContent = String(text || '')
-  }
+export function setSafeText (element, text) {
+  if (!element) return
+  element.textContent = String(text || '')
+}
 
-  /**
+/**
    * Safely sets an attribute on an element
    * @param {HTMLElement} element - Element to set attribute on
    * @param {string} attr - Attribute name
    * @param {string} value - Attribute value
    */
-  export function setSafeAttribute (element, attr, value) {
-    if (!element || !attr) return
-  
-    // Prevent dangerous attributes
-    const dangerous = ['onclick', 'onerror', 'onload', 'onmouseover']
-    if (dangerous.includes(attr.toLowerCase())) return
-  
-    // Sanitize href and src attributes
-    if (attr === 'href' || attr === 'src') {
-      const sanitized = String(value || '')
-      if (sanitized.match(/^(javascript|data|vbscript):/i)) return
-    }
-  
-    element.setAttribute(attr, String(value || ''))
+export function setSafeAttribute (element, attr, value) {
+  if (!element || !attr) return
+
+  // Prevent dangerous attributes
+  const dangerous = ['onclick', 'onerror', 'onload', 'onmouseover']
+  if (dangerous.includes(attr.toLowerCase())) return
+
+  // Sanitize href and src attributes
+  if (attr === 'href' || attr === 'src') {
+    const sanitized = String(value || '')
+    if (sanitized.match(/^(javascript|data|vbscript):/i)) return
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // EXISTING UTILITY FUNCTIONS
-  // ═══════════════════════════════════════════════════════════
+  element.setAttribute(attr, String(value || ''))
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXISTING UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════
 
 export function debounce (fn, delay = 150) {
   let timer
