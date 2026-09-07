@@ -37,7 +37,7 @@ ikke aktive.
 - `validateText()` på saniterte verdien (linje 97)
 - Egen `paste`-håndterer i stedet for å stole på feltets råverdi (linje 61)
 - Anbefalinger skrives fra interne strenger, ikke brukerinput (linje 191)
-- `autocomplete="new-password"` på feltet (`Test-index.html` linje 805)
+- `autocomplete="new-password"` på feltet (`index.html` linje 805)
 
 **Passordgenerering** bruker `crypto.getRandomValues()` — ikke `Math.random()`:
 
@@ -60,13 +60,13 @@ ikke aktive.
 - `sanitizeText()` med maks 50 000 tegn før dekryptering (linje 65, 189)
 - `escapeHtml()` på alle kandidater og resultater (linje 124, 151)
 
-### Filopplasting — `src/js/Test-main.js`
+### Filopplasting — `src/js/main.js`
 
 - `validateFile()` med hviteliste `.txt`, maks 5 MB, MIME `text/plain` (linje 82–84)
 - Filinnhold saniteres med maks 50 000 tegn før bruk
 - Feilhåndtering på `FileReader`
 
-### Substitusjonsresultat — `src/js/Test-main.js`
+### Substitusjonsresultat — `src/js/main.js`
 
 - `escapeHtml()` på dekodet tekst før den settes inn (linje 451). Nødvendig fordi
   substitusjonsmappingen slipper ukjente tegn gjennom uendret via `|| c`, slik at
@@ -79,7 +79,7 @@ ikke aktive.
 - Inline-stiler strippes for `< > ' "` før de settes (linje 83)
 - Tekst settes via `setSafeText()` (linje 95, 97)
 
-### Eksterne lenker — `Test-index.html`
+### Eksterne lenker — `index.html`
 
 - `rel="nofollow noopener noreferrer"` på utgående lenker. `noopener` hindrer
   reverse tabnabbing via `window.opener`; `noreferrer` fjerner Referer-headeren.
