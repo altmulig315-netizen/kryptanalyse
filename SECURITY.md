@@ -1,267 +1,168 @@
 # Sikkerhetsdokumentasjon
 
-## 🔒 Implementerte sikkerhetstiltak
+Dette er en **statisk frontend uten server**. All validering og sanitering skjer i
+nettleseren. Det gir ingen beskyttelse mot en angriper som kontrollerer klienten —
+formålet er å hindre at prosjektets egen kode innfører sårbarheter, særlig XSS
+gjennom dynamisk generert HTML.
 
-Dette prosjektet har implementert omfattende klientsidevalidering og sanitering for å forhindre XSS-angrep og andre sikkerhetsproblemer.
-
----
-
-## 📋 Sikkerhetsfeatures
-
-### 1. **Input Sanitering**
-- `sanitizeText()` - Fjerner farlig innhold fra tekstinput
-  - Fjerner null bytes
-  - Fjerner kontrollkarakterer
-  - Fjerner script-tags og event handlers
-  - Håndhever maksimal lengde
-  - Fjerner `javascript:` URIs
-
-### 2. **HTML Escaping**
-- `escapeHtml()` - Konverterer spesialtegn til HTML-entiteter
-  - `&` → `&amp;`
-  - `<` → `&lt;`
-  - `>` → `&gt;`
-  - `"` → `&quot;`
-  - `'` → `&#039;`
-
-### 3. **Input Validering**
-- `validateText()` - Validerer tekst mot regler
-  - Min/maks lengde
-  - Regex-mønstre
-  - Påkrevde felter
-  - Custom validators
-
-- `validateNumber()` - Validerer numeriske verdier
-  - Min/maks verdier
-  - Heltall vs desimaltall
-  - Endelige verdier (ikke Infinity/NaN)
-
-- `validateFile()` - Validerer filopplastinger
-  - Filtype-sjekk (.txt)
-  - Størrelsesbegrensning (5MB)
-  - MIME-type validering
-
-### 4. **Sikker DOM-manipulasjon**
-- `setSafeText()` - Setter tekstinnhold sikkert via `textContent`
-- `setSafeAttribute()` - Setter attributter med validering
-- `createSafeTextNode()` - Lager sikre tekstnoder
+Hver påstand nedenfor kan etterprøves mot koden. Filer og linjenumre er oppgitt.
 
 ---
 
-## 🛡️ Implementerte sikkerhetstiltak per modul
+## Sikkerhetsfunksjoner
 
-### **Password Checker** (`validator.js`)
-✅ Sanitering av passordinput  
-✅ Håndtering av paste-events med validering  
-✅ Maks lengde enforcement (128 tegn)  
-✅ Feilmeldinger via `textContent` (ikke innerHTML)  
+Alle ligger i `src/js/core/utils.js`.
 
-### **Caesar Cipher Analyzer** (`analyzer.js`)
-✅ Sanitering av input tekst (maks 50,000 tegn)  
-✅ HTML escaping i frekvensdiagrammer  
-✅ Sikker rendering av n-gram tabeller  
-✅ Validering av n-gram lengde  
-✅ Sikker tekstoutput via `setSafeText()`  
+| Funksjon | Hva den gjør | Brukt |
+|---|---|---|
+| `escapeHtml()` | `&` `<` `>` `"` `'` → HTML-entiteter | 9 steder |
+| `sanitizeText()` | Fjerner null-bytes, kontrolltegn, `<script>`-blokker, `on*=`-attributter og `javascript:`; trimmer og håndhever maks lengde | 17 steder |
+| `setSafeText()` | Setter innhold via `textContent` | 11 steder |
+| `validateText()` | Min/maks lengde, påkrevd, regex-mønster, egen validator | 2 steder |
+| `validateNumber()` | Min/maks, heltall vs. desimal, avviser `Infinity`/`NaN` | 2 steder |
+| `validateFile()` | Størrelse, filendelse mot hviteliste, MIME-type | 2 steder |
+| `setSafeAttribute()` | Blokkerer `onclick`/`onerror`/`onload`/`onmouseover`, og `javascript:`/`data:`/`vbscript:` i `href`/`src` | **0 — ubrukt** |
+| `createSafeTextNode()` | Lager tekstnode | **0 — ubrukt** |
 
-### **Caesar Cipher Solver** (`solver.js`)
-✅ Sanitering av input før dekryptering  
-✅ HTML escaping av alle output-resultater  
-✅ Sikker rendering av brute force resultater  
-
-### **File Upload** (`Test-main.js`)
-✅ Filtype-validering (.txt only)  
-✅ Størrelsesbegrensning (5MB)  
-✅ MIME-type sjekk  
-✅ Sanitering av filinnhold  
-✅ Error handling for fil-lesing  
-✅ UTF-8 encoding enforcement  
-
-### **Gallery** (`gallery.js`)
-✅ URL-validering (kun http/https)  
-✅ Sanitering av titler og undertekster  
-✅ Sikker inline style håndtering  
-✅ XSS-beskyttelse i dynamisk innhold  
-
-### **Main Script** (`Test-main.js`)
-✅ Validering av shift-verdier  
-✅ Sanitering før alle cipher-operasjoner  
-✅ Input lengde begrensninger  
+De to siste er eksportert, men kalles ikke fra noen modul. De er tilgjengelige,
+ikke aktive.
 
 ---
 
-## 🚨 Beskyttelse mot angrep
+## Tiltak per modul
 
-### **Cross-Site Scripting (XSS)**
-- ✅ All dynamisk innhold escapes før visning
-- ✅ Bruker `textContent` i stedet for `innerHTML` der mulig
-- ✅ Filtrerer ut `<script>` tags og event handlers
-- ✅ Validerer URLs før bruk i href/src
+### Passordsjekker — `src/js/features/password-checker/validator.js`
 
-### **Code Injection**
-- ✅ Fjerner `javascript:`, `data:`, og `vbscript:` URIs
-- ✅ Forhindrer `onclick` og andre event-attributter
-- ✅ Saniterer all brukerinput
+- Sanitering av input og av innlimt tekst, maks 256 tegn (linje 74, 90)
+- `validateText()` på saniterte verdien (linje 97)
+- Egen `paste`-håndterer i stedet for å stole på feltets råverdi (linje 61)
+- Anbefalinger skrives fra interne strenger, ikke brukerinput (linje 191)
+- `autocomplete="new-password"` på feltet (`Test-index.html` linje 805)
 
-### **File Upload Attacks**
-- ✅ Whitelist filtyper (.txt)
-- ✅ Størrelsesbegrensninger
-- ✅ MIME-type validering
-- ✅ Innholdssanitisering
+**Passordgenerering** bruker `crypto.getRandomValues()` — ikke `Math.random()`:
 
-### **Denial of Service (DoS)**
-- ✅ Maks lengde på input (50,000 tegn for tekst)
-- ✅ Filstørrelse limit (5MB)
-- ✅ Debouncing av input events
+- `randomInt()` bruker rejection sampling. Et rett `% max` over 2³² verdier gir
+  modulo-skjevhet når `max` ikke går opp i 2³²; verdier i den siste ufullstendige
+  bolken forkastes, så alle utfall blir like sannsynlige.
+- Stokkingen er Fisher-Yates. `sort(() => Math.random() - 0.5)` gir skjev
+  fordeling uansett tilfeldighetskilde, fordi sammenligningsfunksjonen er
+  inkonsistent.
+
+### Caesar-analyse — `src/js/features/caesar-cipher/analyzer.js`
+
+- `sanitizeText()` med maks 50 000 tegn (linje 47, 152)
+- `escapeHtml()` på hver verdi som interpoleres inn i frekvensdiagrammer og
+  n-gram-tabeller (linje 119, 142, 167, 182)
+- Tekstutdata via `setSafeText()`
+
+### Caesar-løser — `src/js/features/caesar-cipher/solver.js`
+
+- `sanitizeText()` med maks 50 000 tegn før dekryptering (linje 65, 189)
+- `escapeHtml()` på alle kandidater og resultater (linje 124, 151)
+
+### Filopplasting — `src/js/Test-main.js`
+
+- `validateFile()` med hviteliste `.txt`, maks 5 MB, MIME `text/plain` (linje 82–84)
+- Filinnhold saniteres med maks 50 000 tegn før bruk
+- Feilhåndtering på `FileReader`
+
+### Substitusjonsresultat — `src/js/Test-main.js`
+
+- `escapeHtml()` på dekodet tekst før den settes inn (linje 451). Nødvendig fordi
+  substitusjonsmappingen slipper ukjente tegn gjennom uendret via `|| c`, slik at
+  `<` og `>` ellers overlever.
+
+### Galleri — `src/js/modules/gallery.js`
+
+- URL-er parses med `new URL()` og avvises hvis protokollen ikke er `http:`/`https:` (linje 61–73)
+- Titler og undertekster saniteres, maks 200/500 tegn (linje 47–48)
+- Inline-stiler strippes for `< > ' "` før de settes (linje 83)
+- Tekst settes via `setSafeText()` (linje 95, 97)
+
+### Eksterne lenker — `Test-index.html`
+
+- `rel="nofollow noopener noreferrer"` på utgående lenker. `noopener` hindrer
+  reverse tabnabbing via `window.opener`; `noreferrer` fjerner Referer-headeren.
 
 ---
 
-## 📝 Best Practices
+## Kodepraksis
 
-### **Generelle retningslinjer:**
-1. **Aldri stol på brukerinput** - Alltid sanitize og validate
-2. **Bruk textContent over innerHTML** - Når dynamisk innhold skal vises
-3. **Escape HTML** - Når innerHTML er nødvendig
-4. **Validate på klient OG server** - Klientsidevalidering er ikke nok alene
-5. **Begrens input** - Sett rimelige grenser på lengde og størrelse
-6. **CSS-farger skal være HEX** - Konverter alle `rgb(...)`/`rgba(...)` til HEX (`#RRGGBB` eller `#RRGGBBAA` for alfa)
+- Ingen `eval()` eller `new Function()`
+- Ingen `document.write()`
+- Ingen `setTimeout("...")`/`setInterval("...")` med streng — kun funksjoner
+- Ingen inline `<script>`-blokker eller `on*`-attributter i HTML
+- Ingen tredjeparts kjørebiblioteker eller sporingsskript. `package.json` inneholder
+  kun utviklingsverktøy for linting, som ikke lastes av siden
+- CSS bruker kun HEX-farger; ingen `rgb()`/`rgba()`
 
-### **For utviklere:**
-```javascript
-// ❌ FARLIG - Ikke gjør dette
-element.innerHTML = userInput
+---
 
-// ✅ TRYGT - Gjør dette i stedet
-import { setSafeText } from './core/utils.js'
-setSafeText(element, userInput)
+## Ikke implementert
 
-// ✅ TRYGT - Eller dette hvis du trenger HTML
-import { escapeHtml } from './core/utils.js'
-element.innerHTML = escapeHtml(userInput)
+Dette er ærlige hull, ikke utelatelser.
+
+| Mangler | Hvorfor det betyr noe |
+|---|---|
+| Content Security Policy | Ingen CSP er satt. Siden har ingen server, og det finnes ingen `<meta http-equiv>` i HTML-en. En CSP ville vært siste forsvarslinje hvis escaping svikter. |
+| Sikkerhetsheadere | `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP — ingen av disse er satt. De krever en server eller statisk hosting med header-konfigurasjon. |
+| Serverside-validering | Finnes ikke. Klientvalidering alene er utilstrekkelig for produksjon. |
+| Rate limiting | Ikke relevant uten server, men verdt å merke seg. |
+| `data:` og `vbscript:` i `sanitizeText()` | Kun `javascript:` fjernes. De to andre blokkeres bare i `setSafeAttribute()`, som ikke er i bruk. |
+
+**Om `sanitizeText()`:** den fjerner `<script>`-blokker og `on*=`-attributter med
+regulære uttrykk. Regex-basert HTML-sanitering er ikke robust og bør ikke være
+eneste forsvar. Den reelle beskyttelsen i dette prosjektet er `escapeHtml()` og
+`textContent` — `sanitizeText()` er et supplement, ikke en erstatning.
+
+---
+
+## Verifiser selv
+
+```bash
+# Havner brukerinput i innerHTML uten escaping?
+grep -rn "innerHTML" src/js/
+
+# Brukes de farlige APIene?
+grep -rn "eval(\|document\.write\|new Function" src/js/
+
+# Er tilfeldigheten kryptografisk?
+grep -rn "Math.random\|getRandomValues" src/js/
+
+# Finnes sikkerhetsheadere?
+grep -in "http-equiv" *.html
 ```
 
 ---
 
-## 🔍 Testing sikkerhet
+## Sjekkliste
 
-### **Test med farlige input:**
-```javascript
-// Test XSS
-<script>alert('XSS')</script>
-<img src=x onerror=alert('XSS')>
-javascript:alert('XSS')
-
-// Test SQL-lignende injection (selv om dette er klientside)
-'; DROP TABLE users; --
-" OR 1=1 --
-
-// Test overflødig data
-// Veldig lang streng (over 50,000 tegn)
-// Stor fil (over 5MB)
-```
-
----
-
-## 📚 Sikkerhetsfunksjoner oversikt
-
-| Funksjon | Formål | Lokasjon |
-|----------|--------|----------|
-| `escapeHtml()` | HTML entity encoding | `utils.js` |
-| `sanitizeText()` | Fjerner farlig innhold | `utils.js` |
-| `validateText()` | Validerer tekstinput | `utils.js` |
-| `validateNumber()` | Validerer tall | `utils.js` |
-| `validateFile()` | Validerer filer | `utils.js` |
-| `setSafeText()` | Sikker tekstsetting | `utils.js` |
-| `setSafeAttribute()` | Sikker attributtsetting | `utils.js` |
-| `createSafeTextNode()` | Lager tekstnoder | `utils.js` |
+- [x] HTML-escaping av all brukerinput som når `innerHTML`
+- [x] `textContent` framfor `innerHTML` der HTML ikke trengs
+- [x] Lengdegrenser på tekstinput (256 for passord, 50 000 for chiffertekst)
+- [x] Filopplasting validert på endelse, størrelse og MIME-type
+- [x] URL-validering med protokoll-hviteliste
+- [x] Kryptografisk sikker passordgenerering (`crypto.getRandomValues`)
+- [x] Jevn stokking (Fisher-Yates)
+- [x] `autocomplete="new-password"` på passordfeltet
+- [x] `rel="nofollow noopener noreferrer"` på eksterne lenker
+- [x] Ingen `eval()`, `new Function()` eller `document.write()`
+- [x] Ingen inline `script` eller `on*`-attributter
+- [x] Ingen tredjepartsbiblioteker eller sporing i kjøretid
+- [x] Kun HEX-farger i CSS
+- [ ] Content Security Policy
+- [ ] Sikkerhetsheadere (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, m.fl.)
+- [ ] Serverside-validering
+- [ ] `maxlength`-attributt på inputfeltene i HTML
+- [ ] `setSafeAttribute()` og `createSafeTextNode()` tatt i bruk
 
 ---
 
-## ⚠️ Kjente begrensninger
+## Rapporter sikkerhetsproblemer
 
-1. **Kun klientsidevalidering** - Dette er ikke tilstrekkelig for produksjonssystemer
-2. **Ingen Content Security Policy (CSP)** - Bør implementeres på serversiden
-3. **Ingen rate limiting** - Kan være sårbar for automated attacks
-4. **Lokal filbehandling** - FileReader API kan ha browser-spesifikke sikkerhetsproblemer
+Ikke opprett en offentlig issue. Kontakt prosjekteier direkte med beskrivelse av
+sårbarheten og steg for å reprodusere den.
 
 ---
 
-## 📞 Rapporter sikkerhetsproblemer
-
-Hvis du finner sikkerhetsproblemer, vennligst:
-1. **IKKE** opprett en public issue
-2. Kontakt prosjekteier direkte
-3. Gi detaljert beskrivelse av sårbarheten
-4. Inkluder steps to reproduce
-
----
-
-## 📅 Sist oppdatert
-Desember 28, 2025
-
----
-
-## 🔧 Ekstra Tiltak Implementert
-
-### **Lenker med `target="_blank"`**
-- Bruker `rel="nofollow noopener noreferrer"` på alle eksterne lenker.
-- **nofollow:** Hindrer søkemotorer i å følge/indeksere lenken.
-- **noopener:** Blokkerer `window.opener` → beskytter mot reverse tabnabbing.
-- **noreferrer:** Fjerner Referer‑headeren → bedre personvern og samme beskyttelse som `noopener`.
-
-### **Inline JS‑policy**
-- Ingen inline `script`‑blokker eller `on*`‑attributter i HTML.
-- All interaksjon skjer via eksterne JS‑filer og `addEventListener`.
-- Anbefaling: Aktiver CSP som blokkerer inline kode (`Content-Security-Policy: script-src 'self'`) for ytterligere XSS‑beskyttelse.
-
-### **Forbudte/risikable APIer**
-- Ikke bruk av `eval(...)` eller `new Function(...)`.
-- Ikke bruk av `document.write(...)`.
-- Ingen `setTimeout("...")`/`setInterval("...")` med streng—kun funksjoner, f.eks. `setTimeout(() => ..., ms)`.
-
-### **Tredjepartsscript**
-- Ingen tredjeparts JS‑biblioteker eller trackere i nettklienten (jQuery, Bootstrap, GA, etc.).
-- Kun egne kildefiler; dev‑verktøy i `package.json` er for utvikling (linting) og lastes ikke i produksjon.
-
-## ✅ Security Checklist
-
-- [x] Input sanitization implemented
-- [x] HTML escaping implemented
-- [x] File upload validation
-- [x] XSS protection
-- [x] URL validation
-- [x] Input length limits
-- [x] Error handling
-- [x] Safe DOM manipulation
-- [x] External links use `rel="nofollow noopener noreferrer"`
-- [x] No inline `script` or `on*` HTML attributes
-- [x] No use of `eval(...)`
-- [x] No use of `new Function(...)`
-- [x] No use of `document.write(...)`
-- [x] No `setTimeout("...")`/`setInterval("...")` with string; only function arguments
-- [x] No third‑party libraries/trackers at runtime
-- [ ] Password field hardening: `autocomplete="new-password"`
-- [x] Content Security Policy (CSP): baseline `default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; upgrade-insecure-requests`
-- [x] Referrer‑Policy: `no-referrer` or `strict-origin-when-cross-origin`
-- [x] Permissions‑Policy: disable sensitive APIs (`geolocation=(), camera=(), microphone=(), usb=()`)
-- [x] X‑Frame‑Options: `DENY` (or CSP `frame-ancestors 'none'`)
-- [x] X‑Content‑Type‑Options: `nosniff`
-- [x] Cross‑Origin Isolation: `COOP: same-origin`, `CORP: same-origin` (if needed)
-- [x] Trusted Types: `require-trusted-types-for 'script'` (Chromium)
-- [x] `maxlength`/`pattern` attributes on inputs for additional client‑side validation
-- [x] Subresource Integrity (SRI) for any future CDN assets
-- [x] Avoid storing secrets in `localStorage/sessionStorage`
-- [x] HTTPS enforcement
-- [x] CSS bruker kun HEX‑farger (`#RRGGBB`/`#RRGGBBAA`); ingen `rgb(...)`/`rgba(...)`
-
----
-
-## 🖥️ Server‑Side Only (not implemented in this frontend)
-
-- **Server‑side validation:** Validate all inputs on the server; mirror client rules and reject invalid payloads.
-- **Rate limiting:** Apply per‑IP/user limits for login, uploads, brute‑force endpoints.
-  - Examples: Nginx `limit_req`, Express `express-rate-limit`, Cloudflare/WAF rules.
-
-## 🛠️ Development/CI Practices
-
-- **ESLint security rules:** Add `eslint-plugin-security` to catch common anti‑patterns early.
-- **Dependency audits:** Run `npm audit` periodically or in CI to surface known vulnerabilities.
+**Sist oppdatert:** 7. september 2026
