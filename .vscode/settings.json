@@ -1,9 +1,5 @@
 {
     "snyk.advanced.organization": "34179dce-1825-4517-868a-8ef73b632040",
-<<<<<<< HEAD
-    "snyk.advanced.autoSelectOrganization": true
-=======
     "snyk.advanced.autoSelectOrganization": true,
     "semgrep.scan.onlyGitDirty": false
->>>>>>> d3eaa5bedde278bbbbdec365b39f9dc0353934d0
 }
