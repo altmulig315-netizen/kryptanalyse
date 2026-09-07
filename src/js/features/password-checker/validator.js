@@ -2,6 +2,35 @@
 // character-type indicators, recommendations, and generator.
 import { sanitizeText, validateText } from '../../core/utils.js'
 
+// Kryptografisk tilfeldig heltall i [0, max). Math.random() er forutsigbar og
+// hoerer ikke hjemme i passordgenerering. En rett `% max` over 2^32 verdier gir
+// modulo-skjevhet naar max ikke gaar opp i 2^32, saa vi forkaster verdier i den
+// siste, ufullstendige bolken (rejection sampling) og alle utfall blir like sannsynlige.
+function randomInt (max) {
+  const limit = Math.floor(2 ** 32 / max) * max
+  const buf = new Uint32Array(1)
+  let v
+  do {
+    crypto.getRandomValues(buf)
+    v = buf[0]
+  } while (v >= limit)
+  return v % max
+}
+
+function randomChar (charset) {
+  return charset[randomInt(charset.length)]
+}
+
+// Fisher-Yates. `sort(() => Math.random() - 0.5)` er ikke en jevn stokking:
+// sammenligningsfunksjonen er inkonsistent, og resultatet blir skjevfordelt
+// uansett hvor god tilfeldighetskilden er.
+function shuffle (arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1)
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+}
+
 export class PasswordChecker {
   constructor () {
     this.passwordInput = document.getElementById('password')
@@ -194,15 +223,18 @@ export class PasswordChecker {
     const nums = '0123456789'
     const syms = '!@#$%^&*()_+-=[]{}|;:,.<>?'
     const all = lower + upper + nums + syms
-    let p = ''
-    p += lower[Math.floor(Math.random() * lower.length)]
-    p += upper[Math.floor(Math.random() * upper.length)]
-    p += nums[Math.floor(Math.random() * nums.length)]
-    p += syms[Math.floor(Math.random() * syms.length)]
-    for (let i = p.length; i < length; i++) {
-      p += all[Math.floor(Math.random() * all.length)]
-    }
-    return p.split('').sort(() => Math.random() - 0.5).join('')
+
+    // Garanter minst ett tegn fra hver klasse, fyll resten fra hele settet.
+    const chars = [
+      randomChar(lower),
+      randomChar(upper),
+      randomChar(nums),
+      randomChar(syms)
+    ]
+    while (chars.length < length) chars.push(randomChar(all))
+
+    shuffle(chars)
+    return chars.join('')
   }
 
   resetDisplay () {
