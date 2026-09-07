@@ -1,4 +1,3 @@
-// Configures carousel scroll distance so the loop restarts right after last card.
 // Configures carousel scroll distance and duplicates cards for seamless looping.
 export function initCarousel () {
   const track = document.querySelector('.card-track')
@@ -15,7 +14,6 @@ export function initCarousel () {
   })
 
   const setScrollDistance = () => {
-    const distance = Math.max(track.scrollWidth - container.clientWidth, 0)
     const distance = Math.max(track.scrollWidth / 2 - container.clientWidth, 0)
     track.style.setProperty('--scroll-distance', `${distance}px`)
   }
