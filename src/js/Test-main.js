@@ -13,7 +13,8 @@ import {
   updateLegacyResult,
   validateFile,
   sanitizeText,
-  validateNumber
+  validateNumber,
+  escapeHtml
 } from './core/utils.js'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -447,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     substitutionResult.innerHTML = `
       <div class="auto-solve-card">
         <h3>🤖 Automatisk Substitusjon (Frekvensbasert)</h3>
-        <div class="result-text">${decoded}</div>
+        <div class="result-text">${escapeHtml(decoded)}</div>
         <button class="substitution-apply-btn mt-10" id="copyDecodedBtn"><span>📋 Kopier til resultat</span></button>
       </div>`
     document.getElementById('copyDecodedBtn')?.addEventListener('click', () => {
