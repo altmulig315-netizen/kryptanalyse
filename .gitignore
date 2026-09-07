@@ -2,3 +2,8 @@ node_modules/
 .DS_Store
 npm-debug.log*
 ting som skal legges inni kodene/internett/java/openJdk-25/
+
+# AI-assistentkonfigurasjon - skal ligge lokalt, ikke i repoet
+CLAUDE.md
+.claude/
+.github/copilot-instructions.md
